@@ -1,0 +1,9 @@
+services:
+  shop-landing-page:
+    image: bobaklabs/shop-landing-page:latest
+    container_name: shop-landing-page
+    ports:
+      - "8001:8000"
+    environment:
+      - PORT=8000
+    restart: unless-stopped

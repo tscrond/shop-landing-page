@@ -1,27 +1,36 @@
 <template>
   <div id="fullpage">
     <!-- Top/Bottom Navigation Buttons -->
-    <div v-if="currentSection > 1" class="fixed rounded-full top-4 left-1/2 -translate-x-1/2 z-50">
-      <Button
-        icon="pi pi-chevron-up"
-        @click="goUp"
-        class="fixed top-4 left-1/2 -translate-x-1/2 z-50 rounded-full shadow-lg flex items-center justify-center"
-        style="width: 48px; height: 48px; padding: 0; border-radius: 9999px;"
-        raised
-        severity="warn"
-      />
-    </div>
+<div
+  v-if="currentSection > 1"
+  class="fixed z-50"
+  :class="isMobile ? 'top-4 right-4' : 'top-4 left-1/2 -translate-x-1/2'"
+>
+  <Button
+    icon="pi pi-chevron-up"
+    @click="goUp"
+    class="rounded-full shadow-lg flex items-center justify-center"
+    style="width: 48px; height: 48px; padding: 0; border-radius: 9999px;"
+    raised
+    severity="warn"
+  />
+</div>
 
-    <div v-if="currentSection < 4" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
-      <Button
-        icon="pi pi-chevron-down"
-        @click="goDown"
-        class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 rounded-full shadow-lg flex items-center justify-center"
-        style="width: 48px; height: 48px; padding: 0; border-radius: 9999px;"
-        raised
-        severity="warn"
-      />
-    </div>
+<!-- DÓŁ -->
+<div
+  v-if="currentSection < 4"
+  class="fixed z-50"
+  :class="isMobile ? 'bottom-4 right-4' : 'bottom-4 left-1/2 -translate-x-1/2'"
+>
+  <Button
+    icon="pi pi-chevron-down"
+    @click="goDown"
+    class="rounded-full shadow-lg flex items-center justify-center"
+    style="width: 48px; height: 48px; padding: 0; border-radius: 9999px;"
+    raised
+    severity="warn"
+  />
+</div>
 
     <!-- Section 1: Home -->
     <div class="section">
@@ -153,10 +162,6 @@ function preventScroll(e) {
   if (e.target.closest('.scrollable-section')) return;
   e.preventDefault();
 }
-
-
-
-
 
 </script>
 
