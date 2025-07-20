@@ -15,7 +15,7 @@
       <template v-else>
         <button
           @click="copyPhoneNumber"
-          class="font-bold cursor-pointer sm:text-4xl text-3xl text-gray-800 hover:text-blue-600 focus:outline-none"
+          class="font-bold cursor-pointer sm:text-4xl text-3xl text-white hover:text-blue-600 focus:outline-none"
         >
           +48 123 123 123
         </button>
