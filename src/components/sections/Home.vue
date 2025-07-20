@@ -13,6 +13,7 @@
         </a>
       </template>
       <template v-else>
+        <p class="text-sm">(Kliknij numer telefonu aby skopiować do schowka!)</p>
         <button
           @click="copyPhoneNumber"
           class="font-bold cursor-pointer sm:text-4xl text-3xl text-white hover:text-blue-600 focus:outline-none"
