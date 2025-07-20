@@ -4,7 +4,7 @@
       <div class="w-full max-w-6xl">
         <Carousel :value="products" :numVisible="1" :numScroll="1" circular :responsiveOptions="responsiveOptions">
           <template #item="{ data }">
-            <Card class="flex flex-col items-center justify-center m-2 shadow-md w-full max-w-xs gap-2">
+            <Card class="flex flex-col items-center justify-center m-2 shadow-md w-full max-w-xs gap-4">
               <template #header>
                 <Image
                   src="/medical_bed.png"
@@ -66,6 +66,11 @@ const products = ref([
 
 
 const responsiveOptions = ref([
+  {
+    breakpoint: '3840px',
+    numVisible: 3,
+    numScroll: 1
+  },
   {
     breakpoint: '2048px',
     numVisible: 3,
