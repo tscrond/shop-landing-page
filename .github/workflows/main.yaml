@@ -17,7 +17,7 @@ jobs:
     with:
       image-name-dockerhub: bobaklabs/shop-landing-page
       image-name-github: tscrond/shop-landing-page
-      image-name-google: bobaklabs-prod/shop
+      image-name-google: bobaklabs-prod/shop/shop-landing-page
     secrets:
         docker-hub-username: ${{ secrets.DOCKERHUB_USERNAME }}
         docker-hub-token: ${{ secrets.DOCKERHUB_TOKEN }}
