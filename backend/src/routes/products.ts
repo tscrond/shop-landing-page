@@ -1,9 +1,7 @@
 import { Router, type Request, type Response, type NextFunction } from 'express'
-import { eq } from 'drizzle-orm'
 import multer from 'multer'
-import { db } from '../db.js'
-import { products } from '../schema.js'
-import type { ProductSelect } from '../schema.js'
+import { getDatabase } from '../db.js'
+import type { ProductRow } from '../db.js'
 import { uploadToGcs, deleteFromGcs, getSignedUrl } from '../gcs.js'
 
 export const productsRouter = Router()
@@ -27,7 +25,7 @@ export type Product = {
   imageUrl: string | null
 }
 
-function rowToProduct(row: ProductSelect): Product {
+function rowToProduct(row: ProductRow): Product {
   return { id: row.id, name: row.name, description: row.description, badge: row.badge, badgeColor: row.badgeColor, imageUrl: row.imageUrl ?? null }
 }
 
@@ -53,7 +51,7 @@ productsRouter.get('/admin/verify', requireAdminToken, (_req, res) => {
 
 // GET /api/products — public
 productsRouter.get('/products', async (_req, res) => {
-  const rows = await db.select().from(products).orderBy(products.createdAt)
+  const rows = await getDatabase().getAllProducts()
   const result = await Promise.all(
     rows.map(async row => {
       const p = rowToProduct(row)
@@ -79,14 +77,14 @@ productsRouter.post('/products', requireAdminToken, upload.single('image'), asyn
 
   const imageUrl = req.file ? await uploadToGcs(req.file) : null
 
-  const [row] = await db.insert(products).values({ name, description, badge, badgeColor, imageUrl }).returning()
+  const row = await getDatabase().insertProduct({ name, description, badge, badgeColor, imageUrl })
   res.status(201).json(rowToProduct(row))
 })
 
 // DELETE /api/products/:id — admin only
 productsRouter.delete('/products/:id', requireAdminToken, async (req: Request, res: Response) => {
   const id = String(req.params.id)
-  const [deleted] = await db.delete(products).where(eq(products.id, id)).returning()
+  const deleted = await getDatabase().deleteProduct(id)
   if (!deleted) {
     res.status(404).json({ ok: false, message: 'Product not found.' })
     return

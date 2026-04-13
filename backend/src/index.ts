@@ -5,7 +5,7 @@ import path from 'node:path'
 import { contactRouter } from './routes/contact.js'
 import { healthRouter } from './routes/health.js'
 import { productsRouter } from './routes/products.js'
-import { initDb } from './db.js'
+import { initDatabase } from './db.js'
 
 const app = express()
 const PORT = parseInt(process.env.PORT ?? '3001', 10)
@@ -39,6 +39,6 @@ if (process.env.SERVE_STATIC) {
 }
 
 app.listen(PORT, async () => {
-  await initDb()
+  await initDatabase()
   console.log(`[backend] listening on :${PORT}`)
 })
