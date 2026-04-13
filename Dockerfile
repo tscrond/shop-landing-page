@@ -1,33 +1,50 @@
-# Build stage
-FROM node:20-alpine AS builder
+# Build stage — frontend
+FROM node:20-alpine AS frontend-builder
 
-WORKDIR /shop-landing-page
+WORKDIR /app/frontend
 
 COPY package*.json ./
-COPY tsconfig.json ./
+COPY tsconfig.json tsconfig.app.json tsconfig.node.json ./
 
 RUN npm install
 
-COPY . .
+COPY src ./src
+COPY public ./public
+COPY index.html vite.config.ts env.d.ts ./
+
+RUN npm run build-only
+
+# Build stage — backend
+FROM node:20-alpine AS backend-builder
+
+WORKDIR /app/backend
+
+COPY ./backend/package*.json /app/backend
+COPY ./backend/tsconfig.json /app/backend
+
+RUN npm install
+
+COPY ./backend/src /app/backend/src
 
 RUN npm run build
 
 # Production stage
 FROM node:20-alpine
 
-WORKDIR /shop-landing-page
+WORKDIR /app
 
-# Install serve globally to serve the app in production
-RUN npm install -g serve
+# Copy backend
+COPY --from=backend-builder /app/backend/dist ./backend/dist
+COPY --from=backend-builder /app/backend/node_modules ./backend/node_modules
+COPY --from=backend-builder /app/backend/package.json ./backend/
 
-# Copy the built files from the builder stage
-COPY --from=builder /shop-landing-page/dist ./dist
+# Copy frontend build
+COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
 
-# Copy the entrypoint script
+# Copy entrypoint
 COPY entrypoint.sh ./entrypoint.sh
 RUN chmod +x ./entrypoint.sh
 
 EXPOSE 8000
 
-# Start the app using the entrypoint script
-CMD [ "/shop-landing-page/entrypoint.sh" ]
+CMD [ "/app/entrypoint.sh" ]

@@ -9,6 +9,9 @@ on:
       image-name-github:
         required: true
         type: string
+      image-name-google:
+        required: true
+        type: string
     secrets:
       docker-hub-username:
         required: true
@@ -29,6 +32,7 @@ jobs:
         registry:
           - "ghcr.io"
           - "docker.io"
+          - "europe-west1-docker.pkg.dev"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -52,6 +56,13 @@ jobs:
           username: ${{ secrets.docker-hub-username }}
           password: ${{ secrets.docker-hub-token }}
 
+      - name: Authenticate to Google Cloud
+        if: matrix.registry == 'europe-west1-docker.pkg.dev' && github.event_name != 'pull_request'
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/150760089258/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+          service_account: github-actions-sa@bobaklabs-prod.iam.gserviceaccount.com
+
       - name: Extract Docker metadata (DockerHub)
         id: meta-dockerhub
         uses: docker/metadata-action@v5
@@ -63,6 +74,12 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ matrix.registry }}/${{ inputs.image-name-github }}
+
+      - name: Extract Docker metadata (Google)
+        id: meta-google
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ matrix.registry }}/${{ inputs.image-name-google }}
 
       - name: Build and push Docker image to Docker Hub
         if: matrix.registry == 'docker.io' && github.event_name != 'pull_request'
@@ -87,3 +104,16 @@ jobs:
           labels: ${{ steps.meta-ghcr.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Build and push Docker image to GHCR
+        if: matrix.registry == 'europe-west1-docker.pkg.dev' && github.event_name != 'pull_request'
+        id: build-and-push-google
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta-google.outputs.tags }}
+          labels: ${{ steps.meta-google.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
