@@ -113,7 +113,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Build and push Docker image to GHCR
+      - name: Build and push Docker image to GAR
         if: matrix.registry == 'europe-west1-docker.pkg.dev' && github.event_name != 'pull_request'
         id: build-and-push-google
         uses: docker/build-push-action@v5
