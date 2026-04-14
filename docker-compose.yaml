@@ -1,9 +1,21 @@
 services:
-  shop-landing-page:
+  shop-landing-page-frontend:
     depends_on:
       - db
     image: shop-landing-page:local
     container_name: shop-landing-page
+    ports:
+      - "8001:8000"
+    environment:
+      - PORT=8000
+
+    restart: unless-stopped
+
+  shop-landing-page-backend:
+    depends_on:
+      - db
+    image: shop-landing-page-backend:local
+    container_name: shop-landing-page-backend
     ports:
       - "8001:8000"
     environment:
