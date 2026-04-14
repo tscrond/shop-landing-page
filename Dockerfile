@@ -1,4 +1,4 @@
-# Build stage — frontend
+# Build stage
 FROM node:20-alpine AS frontend-builder
 
 WORKDIR /app/frontend
@@ -14,37 +14,14 @@ COPY index.html vite.config.ts env.d.ts ./
 
 RUN npm run build-only
 
-# Build stage — backend
-FROM node:20-alpine AS backend-builder
 
-WORKDIR /app/backend
+# Production stage (nginx with templating)
+FROM nginx:alpine
 
-COPY ./backend/package*.json /app/backend
-COPY ./backend/tsconfig.json /app/backend
+# Copy template instead of static config
+COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 
-RUN npm install
+# Copy built frontend
+COPY --from=frontend-builder /app/frontend/dist /usr/share/nginx/html
 
-COPY ./backend/src /app/backend/src
-
-RUN npm run build
-
-# Production stage
-FROM node:20-alpine
-
-WORKDIR /app
-
-# Copy backend
-COPY --from=backend-builder /app/backend/dist ./backend/dist
-COPY --from=backend-builder /app/backend/node_modules ./backend/node_modules
-COPY --from=backend-builder /app/backend/package.json ./backend/
-
-# Copy frontend build
-COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
-
-# Copy entrypoint
-COPY entrypoint.sh ./entrypoint.sh
-RUN chmod +x ./entrypoint.sh
-
-EXPOSE 8000
-
-CMD [ "/app/entrypoint.sh" ]
+CMD ["nginx", "-g", "daemon off;"]

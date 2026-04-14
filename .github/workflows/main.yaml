@@ -8,7 +8,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  build-frontend:
     uses: ./.github/workflows/_build.yaml
     permissions:
         contents: read
@@ -18,6 +18,24 @@ jobs:
       image-name-dockerhub: bobaklabs/shop-landing-page
       image-name-github: tscrond/shop-landing-page
       image-name-google: bobaklabs-prod/shop/shop-landing-page
+      context: .
+      dockerfile: Dockerfile
+    secrets:
+        docker-hub-username: ${{ secrets.DOCKERHUB_USERNAME }}
+        docker-hub-token: ${{ secrets.DOCKERHUB_TOKEN }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+  build-backend:
+    uses: ./.github/workflows/_build.yaml
+    permissions:
+        contents: read
+        packages: write
+        id-token: write
+    with:
+      image-name-dockerhub: bobaklabs/shop-landing-page-backend
+      image-name-github: tscrond/shop-landing-page-backend
+      image-name-google: bobaklabs-prod/shop/shop-landing-page-backend
+      context: backend
+      dockerfile: backend/Dockerfile
     secrets:
         docker-hub-username: ${{ secrets.DOCKERHUB_USERNAME }}
         docker-hub-token: ${{ secrets.DOCKERHUB_TOKEN }}

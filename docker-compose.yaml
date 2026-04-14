@@ -1,5 +1,5 @@
 services:
-  shop-landing-page:
+  shop-landing-page-frontend:
     depends_on:
       - db
     image: shop-landing-page:local
@@ -8,19 +8,33 @@ services:
       - "8001:8000"
     environment:
       - PORT=8000
+      - BACKEND_URL=http://shop-landing-page-backend:3000
+
+    restart: unless-stopped
+
+  shop-landing-page-backend:
+    depends_on:
+      - db
+    image: shop-landing-page-backend:local
+    container_name: shop-landing-page-backend
+    ports:
+      - "3001:3000"
+    environment:
+      - PORT=3000
       - SERVE_STATIC=/app/frontend/dist
       - CORS_ORIGIN=http://localhost:8001
       - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB} # use this only for postgres
       - ADMIN_TOKEN=${ADMIN_TOKEN}
-      - DB_PROVIDER=memory
+      - DB_PROVIDER=postgres
       - GCS_BUCKET=${GCS_BUCKET}
-      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS:-}
+      - GCS_SERVICE_ACCOUNT_EMAIL=${GCS_SERVICE_ACCOUNT_EMAIL:-}
+      - GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/gcp-sa-key.json
       - SMTP_HOST=mail-eu.smtp2go.com
       - SMTP_PORT=587
       - SMTP_USERNAME=skrond.com
       - SMTP_PASSWORD=${SMTP_PASSWORD}
     volumes:
-      - ~/.config/gcloud:/root/.config/gcloud:ro
+      - ${GCP_SA_KEY_PATH:-~/gcp-shop-sa-key.json}:/run/secrets/gcp-sa-key.json:ro
     restart: unless-stopped
 
   db:
