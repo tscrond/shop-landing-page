@@ -7,7 +7,7 @@ export const contactRouter = Router()
 // Rate-limit contact form: 5 requests per 15 min per IP
 const contactLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 500,
+  max: 5,
   standardHeaders: true,
   legacyHeaders: false,
   message: { ok: false, message: 'Too many requests. Please try again later.' },
