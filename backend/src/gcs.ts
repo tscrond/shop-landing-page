@@ -7,6 +7,11 @@ const bucketName = process.env.GCS_BUCKET
 // getSignedUrl returns the raw object path unchanged.
 export const gcsEnabled = Boolean(bucketName)
 
+// Required on Cloud Run when using ADC (no key file) to enable signBlob via
+// the IAM Credentials API. Set to the email of the Cloud Run service account.
+// e.g. my-sa@my-project.iam.gserviceaccount.com
+const serviceAccountEmail = process.env.GCS_SERVICE_ACCOUNT_EMAIL
+
 const storage = gcsEnabled ? new Storage() : null
 const bucket  = gcsEnabled ? storage!.bucket(bucketName!) : null
 
@@ -25,23 +30,18 @@ export async function uploadToGcs(file: Express.Multer.File): Promise<string> {
 }
 
 // Generate a short-lived signed URL for reading a private object.
-// Falls back to the raw object path if signing credentials are unavailable.
+// On Cloud Run (ADC without a key file), set GCS_SERVICE_ACCOUNT_EMAIL to the
+// service account email and grant it roles/iam.serviceAccountTokenCreator on itself.
 export async function getSignedUrl(objectPath: string): Promise<string> {
   if (!bucket) return objectPath
 
-  try {
-    const [url] = await bucket.file(objectPath).getSignedUrl({
-      version: 'v4',
-      action: 'read',
-      expires: Date.now() + 60 * 60 * 1000, // 1 hour
-    })
-    return url
-  } catch (err) {
-    // Service account key required for signing — fall back to raw path.
-    // Set GOOGLE_APPLICATION_CREDENTIALS to a service account JSON to enable signed URLs.
-    console.warn('[gcs] Signing unavailable, returning raw object path:', (err as Error).message)
-    return objectPath
-  }
+  const [url] = await bucket.file(objectPath).getSignedUrl({
+    version: 'v4',
+    action: 'read',
+    expires: Date.now() + 60 * 60 * 1000, // 1 hour
+    ...(serviceAccountEmail ? { issuer: serviceAccountEmail } : {}),
+  })
+  return url
 }
 
 // objectPath is the value stored in the DB (e.g. "products/123-abc.jpg").

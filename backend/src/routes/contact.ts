@@ -1,5 +1,6 @@
 import { Router, type Request, type Response } from 'express'
 import rateLimit from 'express-rate-limit'
+import { sendMail } from '../mailer.js'
 
 export const contactRouter = Router()
 
@@ -26,11 +27,9 @@ contactRouter.post('/contact', contactLimiter, async (req: Request, res: Respons
     return
   }
 
-  // TODO: Replace with actual mail delivery (e.g. cloud function, SES, Resend, Nodemailer)
   console.log('[contact]', { subject, email, message: message.slice(0, 100) })
 
-  // Placeholder — forward to cloud function or send email here
-  // await sendEmail({ to: process.env.CONTACT_EMAIL, subject, replyTo: email, body: message })
+  await sendMail({ replyTo: email, subject, body: message })
 
   res.json({ ok: true, message: 'Message sent successfully.' })
 })
