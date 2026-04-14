@@ -3,12 +3,12 @@ FROM node:20-alpine AS backend-builder
 
 WORKDIR /app/backend
 
-COPY backend/package*.json ./
-COPY backend/tsconfig.json ./
+COPY package*.json ./
+COPY tsconfig.json ./
 
 RUN npm install
 
-COPY backend/src ./src
+COPY src ./src
 
 RUN npm run build
 
