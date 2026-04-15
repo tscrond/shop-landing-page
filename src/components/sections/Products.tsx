@@ -30,7 +30,7 @@ export default function Products() {
   const next = () => setPage((p) => (p + 1) % totalPages)
 
   return (
-    <div className="relative flex flex-col justify-center items-center h-full w-full px-4 overflow-y-auto py-8">
+    <div className="relative flex flex-col justify-center items-center h-full w-full px-4 overflow-y-auto pt-8 pb-24 sm:pb-10">
       {/* Decorative gradient orbs */}
       <div className="absolute top-[20%] left-[5%] w-[350px] h-[350px] bg-emerald-500/8 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[15%] right-[5%] w-[300px] h-[300px] bg-sky-500/6 rounded-full blur-[120px] pointer-events-none" />

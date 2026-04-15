@@ -1,5 +1,5 @@
 import { useState, useEffect, type FormEvent, useRef } from 'react'
-import { getProducts, addProduct, deleteProduct, type Product } from '@/api'
+import { getProducts, addProduct, deleteProduct, type Product, getReviews, deleteReview, type Review } from '@/api'
 
 const TOKEN_KEY = 'ADMIN_TOKEN'
 
@@ -7,6 +7,7 @@ export default function AdminView() {
   const [token, setToken] = useState(() => sessionStorage.getItem(TOKEN_KEY) ?? '')
   const [tokenInput, setTokenInput] = useState('')
   const [products, setProducts] = useState<Product[]>([])
+  const [reviews, setReviews] = useState<Review[]>([])
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -18,6 +19,7 @@ export default function AdminView() {
   useEffect(() => {
     if (!isAuthed) return
     getProducts().then(setProducts).catch(() => setError('Failed to load products.'))
+    getReviews().then(setReviews).catch(() => setError('Failed to load reviews.'))
   }, [isAuthed])
 
   async function login(e: FormEvent) {
@@ -101,6 +103,34 @@ export default function AdminView() {
     }
   }
 
+  async function handleDeleteReview(id: string, reviewName: string) {
+    setError(null)
+    setSuccess(null)
+    try {
+      await deleteReview(id, token)
+      setReviews(prev => prev.filter(r => r.id !== id))
+      setSuccess(`Review by "${reviewName}" deleted.`)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete review.')
+    }
+  }
+
+  async function handleDeleteAllReviews() {
+    if (!window.confirm(`Delete all ${reviews.length} reviews? This cannot be undone.`)) return
+    setError(null)
+    setSuccess(null)
+    setLoading(true)
+    try {
+      await Promise.all(reviews.map(r => deleteReview(r.id, token)))
+      setReviews([])
+      setSuccess('All reviews deleted.')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete all reviews.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   if (!isAuthed) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0a0f1a] px-4">
@@ -153,11 +183,11 @@ export default function AdminView() {
             <div className="flex flex-col gap-1.5">
               <label className="text-sm text-gray-400">Badge color</label>
               <select name="badgeColor" className="input-field">
-                <option value="bg-emerald-500">🟢 Emerald — Nowe</option>
-                <option value="bg-amber-500">🟡 Amber — Używane</option>
-                <option value="bg-sky-500">🔵 Sky</option>
-                <option value="bg-red-500">🔴 Red</option>
-                <option value="bg-violet-500">🟣 Violet</option>
+                <option value="bg-emerald-500" className="text-black">🟢 Emerald — Nowe</option>
+                <option value="bg-amber-500" className="text-black">🟡 Amber — Używane</option>
+                <option value="bg-sky-500" className="text-black">🔵 Sky</option>
+                <option value="bg-red-500" className="text-black">🔴 Red</option>
+                <option value="bg-violet-500" className="text-black">🟣 Violet</option>
               </select>
             </div>
             <div className="flex flex-col gap-1.5">
@@ -217,6 +247,47 @@ export default function AdminView() {
                 onClick={() => handleDelete(p.id, p.name)}
                 className="shrink-0 text-gray-500 hover:text-red-400 transition-colors cursor-pointer"
                 title="Delete"
+              >
+                <i className="pi pi-trash" />
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* Reviews list */}
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Reviews ({reviews.length})</h2>
+            {reviews.length > 0 && (
+              <button
+                onClick={handleDeleteAllReviews}
+                disabled={loading}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-300 disabled:opacity-40 disabled:cursor-not-allowed transition-all text-sm font-medium cursor-pointer"
+              >
+                {loading
+                  ? <><i className="pi pi-spin pi-spinner" /> Deleting…</>
+                  : <><i className="pi pi-trash" /> Delete all</>}
+              </button>
+            )}
+          </div>
+          {reviews.length === 0 && <p className="text-gray-500 text-sm">No reviews yet.</p>}
+          {reviews.map(r => (
+            <div key={r.id} className="flex items-start justify-between gap-4 rounded-xl border border-white/10 bg-white/5 p-4">
+              <div className="flex flex-col gap-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-medium text-sm">{r.name}</span>
+                  <div className="flex gap-0.5">
+                    {[1,2,3,4,5].map(s => (
+                      <i key={s} className={`pi ${s <= r.rating ? 'pi-star-fill text-amber-400' : 'pi-star text-white/20'} text-xs`} />
+                    ))}
+                  </div>
+                </div>
+                <p className="text-xs text-gray-400 line-clamp-2">{r.description}</p>
+              </div>
+              <button
+                onClick={() => handleDeleteReview(r.id, r.name)}
+                className="shrink-0 text-gray-500 hover:text-red-400 transition-colors cursor-pointer"
+                title="Delete review"
               >
                 <i className="pi pi-trash" />
               </button>

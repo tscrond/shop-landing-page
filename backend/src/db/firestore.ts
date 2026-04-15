@@ -1,8 +1,9 @@
 import { Firestore, Timestamp, type DocumentData } from '@google-cloud/firestore'
-import type { IDatabase, ProductRow, ProductInsertData } from './types.js'
+import type { IDatabase, ProductRow, ProductInsertData, ReviewRow, ReviewInsertData } from './types.js'
 import { DEFAULT_PRODUCTS } from './seeds.js'
 
 const COLLECTION = 'products'
+const REVIEWS_COLLECTION = 'reviews'
 
 function docToRow(id: string, d: DocumentData): ProductRow {
   return {
@@ -12,6 +13,16 @@ function docToRow(id: string, d: DocumentData): ProductRow {
     badge:       d.badge,
     badgeColor:  d.badgeColor,
     imageUrl:    d.imageUrl ?? null,
+    createdAt:   (d.createdAt as Timestamp).toDate(),
+  }
+}
+
+function reviewDocToRow(id: string, d: DocumentData): ReviewRow {
+  return {
+    id,
+    name:        d.name,
+    description: d.description,
+    rating:      d.rating,
     createdAt:   (d.createdAt as Timestamp).toDate(),
   }
 }
@@ -61,6 +72,30 @@ export class FirestoreDatabase implements IDatabase {
     const doc = await ref.get()
     if (!doc.exists) return null
     const row = docToRow(doc.id, doc.data()!)
+    await ref.delete()
+    return row
+  }
+
+  async getAllReviews(): Promise<ReviewRow[]> {
+    const snapshot = await this.firestore.collection(REVIEWS_COLLECTION).orderBy('createdAt').get()
+    return snapshot.docs.map(doc => reviewDocToRow(doc.id, doc.data()))
+  }
+
+  async insertReview(data: ReviewInsertData): Promise<ReviewRow> {
+    const ref = await this.firestore.collection(REVIEWS_COLLECTION).add({
+      ...data,
+      rating: Number(data.rating),
+      createdAt: Timestamp.now(),
+    })
+    const doc = await ref.get()
+    return reviewDocToRow(doc.id, doc.data()!)
+  }
+
+  async deleteReview(id: string): Promise<ReviewRow | null> {
+    const ref = this.firestore.collection(REVIEWS_COLLECTION).doc(id)
+    const doc = await ref.get()
+    if (!doc.exists) return null
+    const row = reviewDocToRow(doc.id, doc.data()!)
     await ref.delete()
     return row
   }

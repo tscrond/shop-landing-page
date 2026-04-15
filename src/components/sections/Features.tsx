@@ -56,7 +56,7 @@ export default function Features({ navigation }: FeaturesProps) {
       <div className="absolute top-[10%] right-[-5%] w-[350px] h-[350px] bg-sky-500/8 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[10%] left-[-5%] w-[350px] h-[350px] bg-violet-500/8 rounded-full blur-[120px] pointer-events-none" />
 
-      <div className="flex flex-col items-center w-full px-4 py-8 overflow-y-auto max-h-full">
+      <div className="flex flex-col items-center w-full px-4 pt-8 pb-24 sm:pb-10 overflow-y-auto max-h-full">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-6xl w-full">
           <div className="col-span-1 md:col-span-3 text-center mb-4">
             <h1 className="text-4xl font-extrabold text-white mb-2">Co oferujemy?</h1>

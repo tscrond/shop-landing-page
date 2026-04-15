@@ -3,6 +3,7 @@ import multer from 'multer'
 import { getDatabase } from '../db.js'
 import type { ProductRow } from '../db.js'
 import { uploadToGcs, deleteFromGcs, getSignedUrl } from '../gcs.js'
+import { requireAdminToken } from './middleware.js'
 
 export const productsRouter = Router()
 
@@ -29,20 +30,7 @@ function rowToProduct(row: ProductRow): Product {
   return { id: row.id, name: row.name, description: row.description, badge: row.badge, badgeColor: row.badgeColor, imageUrl: row.imageUrl ?? null }
 }
 
-function requireAdminToken(req: Request, res: Response, next: NextFunction) {
-  const adminToken = process.env.ADMIN_TOKEN
-  if (!adminToken) {
-    res.status(500).json({ ok: false, message: 'Server misconfiguration: ADMIN_TOKEN not set.' })
-    return
-  }
-  const authHeader = req.headers.authorization ?? ''
-  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : ''
-  if (token !== adminToken) {
-    res.status(401).json({ ok: false, message: 'Unauthorized.' })
-    return
-  }
-  next()
-}
+
 
 // GET /api/admin/verify — used by frontend to validate token before storing
 productsRouter.get('/admin/verify', requireAdminToken, (_req, res) => {

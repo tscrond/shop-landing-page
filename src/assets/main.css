@@ -197,3 +197,43 @@ body {
   display: none;
 }
 
+/* Utility: hide scrollbar while keeping scroll behaviour */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Pagination shortcut buttons (first / last page) */
+.page-btn {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.page-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+}
+
+/* Extra bottom clearance for the mobile nav bar */
+@media (max-width: 639px) {
+  .fullpage-section {
+    padding-bottom: 96px;
+  }
+}
+
+/* Extra right clearance for the desktop side nav panel */
+@media (min-width: 640px) {
+  .fullpage-section {
+    padding-right: 80px;
+  }
+}
+

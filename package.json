@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "run-p dev:frontend dev:backend",
+    "dev": "run-p dev:frontend",
     "dev:frontend": "vite",
     "dev:backend": "npm --prefix backend run dev",
     "dev:build": "run-p type-check \"build-only {@}\" -- && npm --prefix backend run build",

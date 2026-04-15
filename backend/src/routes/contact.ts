@@ -27,6 +27,16 @@ contactRouter.post('/contact', contactLimiter, async (req: Request, res: Respons
     return
   }
 
+  if (typeof subject !== 'string' || subject.length > 200) {
+    res.status(400).json({ ok: false, message: 'Subject must be a string under 200 characters.' })
+    return
+  }
+
+  if (typeof message !== 'string' || message.length > 5000) {
+    res.status(400).json({ ok: false, message: 'Message must be a string under 5000 characters.' })
+    return
+  }
+
   console.log('[contact]', { subject, email, message: message.slice(0, 100) })
 
   await sendMail({ replyTo: email, subject, body: message })

@@ -1,6 +1,6 @@
 import type { IDatabase } from './types.js'
 
-export type { IDatabase, ProductRow, ProductInsertData } from './types.js'
+export type { IDatabase, ProductRow, ProductInsertData, ReviewRow, ReviewInsertData } from './types.js'
 
 let _instance: IDatabase | null = null
 

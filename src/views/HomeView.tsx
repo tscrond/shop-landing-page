@@ -5,16 +5,23 @@ import Home from '../components/sections/Home'
 import Features from '../components/sections/Features'
 import Products from '../components/sections/Products'
 import Contact from '../components/sections/Contact'
+import Reviews from '../components/sections/Reviews'
 
-const SECTION_IDS = ['home', 'features', 'products', 'contact'] as const
+const SECTION_IDS = ['home', 'features', 'products', 'contact', 'reviews'] as const
 const TOTAL = SECTION_IDS.length
+
+const SECTION_LABELS: Record<typeof SECTION_IDS[number], string> = {
+  home:     'Strona główna',
+  features: 'Nasza oferta',
+  products: 'Produkty',
+  contact:  'Kontakt',
+  reviews:  'Opinie',
+}
 
 export default function HomeView() {
   const [currentSection, setCurrentSection] = useState(0)
   const [_, setDirection] = useState(0) // -1 up, 1 down
-  const [isMobile, setIsMobile] = useState(false)
   const isAnimating = useRef(false)
-  const touchStartY = useRef(0)
 
   const goTo = useCallback((index: number) => {
     if (index < 0 || index >= TOTAL || index === currentSection || isAnimating.current) return
@@ -27,25 +34,23 @@ export default function HomeView() {
   const goUp = useCallback(() => goTo(currentSection - 1), [currentSection, goTo])
   const goDown = useCallback(() => goTo(currentSection + 1), [currentSection, goTo])
 
-  // Responsive check
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth <= 768)
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
-
   // Wheel navigation — only change section when scrolled to top/bottom
   useEffect(() => {
     const onWheel = (e: WheelEvent) => {
       const section = document.querySelector('.fullpage-section') as HTMLElement | null
       if (!section) return
       // Check the section itself AND any scrollable child
-      const scrollable = section.querySelector('.overflow-y-auto') as HTMLElement | null
-      const el = scrollable && scrollable.scrollHeight > scrollable.clientHeight ? scrollable : section
-      const atTop = el.scrollTop <= 5
-      const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight <= 5
-      if ((e.deltaY > 0 && !atBottom) || (e.deltaY < 0 && !atTop)) return // let content scroll
+      // Also verify computed overflow-y is actually scrollable (not 'visible')
+      const scrollableCandidate = section.querySelector('.overflow-y-auto') as HTMLElement | null
+      const isActuallyScrollable = scrollableCandidate &&
+        scrollableCandidate.scrollHeight > scrollableCandidate.clientHeight &&
+        (() => { const oy = window.getComputedStyle(scrollableCandidate).overflowY; return oy === 'auto' || oy === 'scroll' })()
+      // Only gate on scroll position when there's a genuinely scrollable child
+      if (isActuallyScrollable && scrollableCandidate) {
+        const atTop = scrollableCandidate.scrollTop <= 5
+        const atBottom = scrollableCandidate.scrollHeight - scrollableCandidate.scrollTop - scrollableCandidate.clientHeight <= 5
+        if ((e.deltaY > 0 && !atBottom) || (e.deltaY < 0 && !atTop)) return // let content scroll
+      }
       e.preventDefault()
       if (isAnimating.current) return
       if (e.deltaY > 30) goDown()
@@ -53,31 +58,6 @@ export default function HomeView() {
     }
     window.addEventListener('wheel', onWheel, { passive: false })
     return () => window.removeEventListener('wheel', onWheel)
-  }, [goUp, goDown])
-
-  // Touch navigation — only change section when scrolled to top/bottom
-  useEffect(() => {
-    const onTouchStart = (e: TouchEvent) => {
-      touchStartY.current = e.touches[0].clientY
-    }
-    const onTouchEnd = (e: TouchEvent) => {
-      if (isAnimating.current) return
-      const delta = touchStartY.current - e.changedTouches[0].clientY
-      const section = document.querySelector('.fullpage-section') as HTMLElement | null
-      if (!section) return
-      const scrollable = section.querySelector('.overflow-y-auto') as HTMLElement | null
-      const el = scrollable && scrollable.scrollHeight > scrollable.clientHeight ? scrollable : section
-      const atTop = el.scrollTop <= 5
-      const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight <= 5
-      if (delta > 50 && atBottom) goDown()
-      else if (delta < -50 && atTop) goUp()
-    }
-    window.addEventListener('touchstart', onTouchStart, { passive: true })
-    window.addEventListener('touchend', onTouchEnd, { passive: true })
-    return () => {
-      window.removeEventListener('touchstart', onTouchStart)
-      window.removeEventListener('touchend', onTouchEnd)
-    }
   }, [goUp, goDown])
 
   // Keyboard navigation
@@ -102,13 +82,23 @@ export default function HomeView() {
     <Home
       key="home"
       navigation={
-        <div className="flex flex-col sm:flex-row gap-4">
-          <button onClick={() => goTo(1)} className="btn-primary">
-            <i className="pi pi-arrow-down" /> Nasza oferta
-          </button>
-          <button onClick={() => goTo(3)} className="btn-primary-outline">
-            <i className="pi pi-phone" /> Skontaktuj się z nami
-          </button>
+        <div className="grid grid-cols-2 gap-3 w-full max-w-sm sm:max-w-md">
+          {([
+            { icon: 'pi-list',     label: 'Nasza oferta',  sub: 'Dlaczego my?',           idx: 1 },
+            { icon: 'pi-shopping-bag', label: 'Produkty',  sub: 'Łóżka rehabilitacyjne',  idx: 2 },
+            { icon: 'pi-phone',   label: 'Kontakt',        sub: 'Napisz lub zadzwoń',     idx: 3 },
+            { icon: 'pi-comments', label: 'Opinie',        sub: 'Co mówią klienci',       idx: 4 },
+          ] as const).map(({ icon, label, sub, idx }) => (
+            <button
+              key={idx}
+              onClick={() => goTo(idx)}
+              className="group flex flex-col items-center gap-1 sm:gap-1.5 p-3 sm:p-4 rounded-2xl border border-white/10 bg-white/5 hover:bg-sky-500/10 hover:border-sky-400/30 hover:shadow-[0_0_24px_rgba(56,189,248,0.1)] transition-all duration-200 cursor-pointer"
+            >
+              <i className={`pi ${icon} text-sky-400 text-xl sm:text-2xl group-hover:scale-110 transition-transform duration-200`} />
+              <span className="text-white font-semibold text-sm sm:text-base leading-tight">{label}</span>
+              <span className="text-gray-500 text-xs hidden sm:block">{sub}</span>
+            </button>
+          ))}
         </div>
       }
     />,
@@ -130,29 +120,20 @@ export default function HomeView() {
     />,
     <Products key="products" />,
     <Contact key="contact" />,
+    <Reviews key="reviews" />,
   ]
 
   return (
     <>
-      {/* Navigation arrows */}
-      {currentSection > 0 && (
-        <div className={`fixed z-[9999] ${isMobile ? 'top-4 right-4' : 'top-6 left-1/2 -translate-x-1/2'}`}>
-          <button onClick={goUp} className="nav-arrow group">
-            <i className="pi pi-chevron-up text-lg group-hover:-translate-y-0.5 transition-transform" />
-          </button>
-        </div>
-      )}
+      {/* Right-side navigation panel — desktop only, touch handles mobile */}
+      <div className="hidden sm:flex fixed z-[9999] right-6 top-1/2 -translate-y-1/2 flex-col items-center gap-3">
+        <button
+          onClick={goUp}
+          className={`nav-arrow group transition-opacity duration-300 ${currentSection === 0 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+        >
+          <i className="pi pi-chevron-up text-base group-hover:-translate-y-0.5 transition-transform" />
+        </button>
 
-      {currentSection < TOTAL - 1 && (
-        <div className={`fixed z-[9999] ${isMobile ? 'bottom-4 right-4' : 'bottom-6 left-1/2 -translate-x-1/2'}`}>
-          <button onClick={goDown} className="nav-arrow group animate-bounce-slow">
-            <i className="pi pi-chevron-down text-lg group-hover:translate-y-0.5 transition-transform" />
-          </button>
-        </div>
-      )}
-
-      {/* Section dots indicator */}
-      <div className={`fixed z-[9999] right-6 top-1/2 -translate-y-1/2 flex-col gap-3 ${isMobile ? 'hidden' : 'flex'}`}>
         {SECTION_IDS.map((label, i) => (
           <button
             key={label}
@@ -165,6 +146,41 @@ export default function HomeView() {
             }`}
           />
         ))}
+
+        <button
+          onClick={goDown}
+          className={`nav-arrow group animate-bounce-slow transition-opacity duration-300 ${currentSection >= TOTAL - 1 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+        >
+          <i className="pi pi-chevron-down text-base group-hover:translate-y-0.5 transition-transform" />
+        </button>
+      </div>
+
+      {/* Mobile bottom navigation bar */}
+      <div className="sm:hidden fixed z-[9999] bottom-0 left-0 right-0 bg-[#0a0f1a]/95 backdrop-blur-md border-t border-white/10 flex items-center px-3 py-2 gap-2">
+        <button
+          onClick={goUp}
+          disabled={currentSection === 0}
+          className="flex items-center gap-1.5 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white font-semibold text-sm disabled:opacity-25 disabled:cursor-not-allowed active:bg-white/15 transition-colors min-w-[88px] justify-center"
+        >
+          <i className="pi pi-chevron-left text-sky-400" />
+          Wstecz
+        </button>
+
+        <div className="flex-1 flex flex-col items-center gap-0.5">
+          <span className="text-white font-bold text-sm leading-tight">
+            {SECTION_LABELS[SECTION_IDS[currentSection]]}
+          </span>
+          <span className="text-gray-500 text-xs">{currentSection + 1}&nbsp;/&nbsp;{TOTAL}</span>
+        </div>
+
+        <button
+          onClick={goDown}
+          disabled={currentSection >= TOTAL - 1}
+          className="flex items-center gap-1.5 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white font-semibold text-sm disabled:opacity-25 disabled:cursor-not-allowed active:bg-white/15 transition-colors min-w-[88px] justify-center"
+        >
+          Dalej
+          <i className="pi pi-chevron-right text-sky-400" />
+        </button>
       </div>
 
       {/* Fullpage Motion container */}

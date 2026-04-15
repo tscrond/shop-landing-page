@@ -20,13 +20,13 @@ export default function Home({ navigation }: HomeProps) {
   }
 
   return (
-    <div className="relative flex flex-col items-center justify-evenly w-full h-full px-4 gap-4 overflow-visible">
+    <div className="no-scrollbar relative flex flex-col items-center justify-center w-full h-full px-4 gap-8 sm:gap-10 overflow-y-auto sm:overflow-visible py-8 pb-24 sm:pb-10">
       {/* Decorative gradient orbs */}
       <div className="absolute top-[-15%] left-[-5%] w-[500px] h-[500px] bg-sky-500/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-15%] right-[-5%] w-[400px] h-[400px] bg-indigo-500/8 rounded-full blur-[120px] pointer-events-none" />
 
       <img
-        className="relative w-[200px] h-[200px] sm:w-[380px] sm:h-[380px] drop-shadow-[0_0_60px_rgba(56,189,248,0.15)]"
+        className="relative w-[160px] h-[160px] sm:w-[260px] sm:h-[260px] drop-shadow-[0_0_60px_rgba(56,189,248,0.15)]"
         src="/medical_bed.png"
         alt="Łóżka Rehabilitacyjne"
       />
